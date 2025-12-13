@@ -184,33 +184,6 @@ Write only the WhatsApp message.""",
         else:
             st.warning("Enter both API keys")
 
-# Helper function to extract clean content
-def extract_clean_content(content_str):
-    """Extract clean text from parts=[Part(text=\"\"\"...\"\"\")] format"""
-    if not content_str:
-        return content_str
-    
-    # Check if content is in the parts format
-    if 'parts=[Part(text="""' in content_str:
-        try:
-            # Extract text between the triple quotes
-            start_marker = 'parts=[Part(text="""'
-            end_marker = '""")]'
-            
-            # Find the content between the markers
-            start_idx = content_str.find(start_marker) + len(start_marker)
-            # Find the closing triple quotes
-            end_idx = content_str.find(end_marker, start_idx)
-            
-            if start_idx > len(start_marker) - 1 and end_idx > start_idx:
-                clean_text = content_str[start_idx:end_idx].strip()
-                return clean_text
-        except:
-            pass
-    
-    # If no extraction worked, return original
-    return content_str
-
 # Main area
 st.header("Test Multi-Platform Pipeline")
 
@@ -263,22 +236,22 @@ else:
                         
                         # Research agent
                         if 'research_agent' in agent_name or 'TOPIC:' in content_str:
-                            research_output = extract_clean_content(content_str)
+                            research_output = content_str
                         
                         # LinkedIn agent
                         elif 'linkedin_agent' in agent_name or '#9jaai_farmer' in content_str.lower():
-                            linkedin_output = extract_clean_content(content_str)
-                            st.session_state.platform_outputs['linkedin'] = linkedin_output
+                            linkedin_output = content_str
+                            st.session_state.platform_outputs['linkedin'] = content_str
                         
                         # Facebook agent
                         elif 'facebook_agent' in agent_name or 'read more' in content_str.lower():
-                            facebook_output = extract_clean_content(content_str)
-                            st.session_state.platform_outputs['facebook'] = facebook_output
+                            facebook_output = content_str
+                            st.session_state.platform_outputs['facebook'] = content_str
                         
                         # WhatsApp agent
                         elif 'whatsapp_agent' in agent_name or '[link_' in content_str.lower():
-                            whatsapp_output = extract_clean_content(content_str)
-                            st.session_state.platform_outputs['whatsapp'] = whatsapp_output
+                            whatsapp_output = content_str
+                            st.session_state.platform_outputs['whatsapp'] = content_str
                 
                 # ======================
                 # DISPLAY RESULTS
