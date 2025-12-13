@@ -28,6 +28,36 @@ if 'runner' not in st.session_state:
 if 'platform_outputs' not in st.session_state:
     st.session_state.platform_outputs = {}
 
+# ============================================
+# TEXT EXTRACTION FUNCTION
+# ============================================
+def extract_text(event):
+    """Extract text content from ADK event objects."""
+    if not hasattr(event, "content"):
+        return ""
+    
+    content = event.content
+    
+    # Case 1: Direct text attribute
+    if hasattr(content, "text") and content.text:
+        return content.text
+    
+    # Case 2: It's iterable (list, tuple, etc.)
+    if hasattr(content, "__iter__"):
+        texts = []
+        for item in content:
+            # Check if it's a Part-like object with text
+            if hasattr(item, "text") and item.text:
+                texts.append(item.text)
+            # Or if it's a string/direct text
+            elif isinstance(item, str):
+                texts.append(item)
+        if texts:  # Only return if we found text
+            return "\n".join(texts)
+    
+    # Case 3: Fallback to string representation
+    return str(content)
+
 # Sidebar for API keys
 with st.sidebar:
     st.header("API Configuration")
@@ -67,6 +97,7 @@ with st.sidebar:
                         model=Gemini(model="gemini-2.5-flash-lite"),
                         description="Researcher that finds current information",
                         instruction="""You are a research agent. When given a topic:
+
 1. Search for recent information (last 1-2 years)
 2. Find 5 key insights with examples
 3. Include practical applications
@@ -77,17 +108,15 @@ TOPIC: [topic]
 KEY INSIGHTS:
 1. [Insight 1]
 2. [Insight 2]
-
 APPLICATIONS:
-- [Application 1]
-
+[Application 1]
 STATISTICS:
-- [Statistic if available]
+[Statistic if available]
 
 Remember to store with: context.state['research_findings'] = """,
                         tools=[GoogleSearchTool(bypass_multi_tools_limit=True)],
                     )
-                    
+
                     # ======================
                     # 2. LINKEDIN AGENT
                     # ======================
@@ -111,7 +140,7 @@ ONLY use information from context.state['research_findings'].
 
 Write only the LinkedIn post.""",
                     )
-                    
+
                     # ======================
                     # 3. FACEBOOK AGENT
                     # ======================
@@ -134,7 +163,7 @@ ONLY use information from context.state['research_findings'].
 
 Write only the Facebook post with image suggestion.""",
                     )
-                    
+
                     # ======================
                     # 4. WHATSAPP AGENT
                     # ======================
@@ -157,7 +186,7 @@ ONLY use information from context.state['research_findings'].
 
 Write only the WhatsApp message.""",
                     )
-                    
+
                     # ======================
                     # CREATE PIPELINE
                     # ======================
@@ -216,8 +245,9 @@ else:
                     with st.expander(f"Event {i}: {type(event).__name__}"):
                         st.write("Agent:", getattr(event, 'agent_name', 'Unknown'))
                         if hasattr(event, 'content'):
-                            content = str(event.content)
-                            st.write("Content preview:", content[:200] + "..." if len(content) > 200 else content)
+                            # Use the extract_text function here too
+                            content_preview = extract_text(event)
+                            st.write("Content preview:", content_preview[:200] + "..." if len(content_preview) > 200 else content_preview)
                 
                 # ======================
                 # EXTRACT PLATFORM OUTPUTS
@@ -231,7 +261,8 @@ else:
                 
                 for event in response_events:
                     if hasattr(event, 'content'):
-                        content_str = str(event.content)
+                        # USE THE EXTRACT_TEXT FUNCTION INSTEAD OF str(event.content)
+                        content_str = extract_text(event)
                         agent_name = str(event).lower()
                         
                         # Research agent
